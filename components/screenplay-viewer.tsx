@@ -39,16 +39,13 @@ export function ScreenplayViewer({ screenplay, onBack }: ScreenplayViewerProps) 
       if (e.key === "ArrowRight") nextPage()
       if (e.key === "ArrowLeft") prevPage()
     }
-
     window.addEventListener("keydown", handleKeyPress)
     return () => window.removeEventListener("keydown", handleKeyPress)
   }, [totalPages])
 
   /* ---------- Responsive width ---------- */
   useEffect(() => {
-    const updateWidth = () => {
-      setPageWidth(800)
-    }
+    const updateWidth = () => setPageWidth(800)
     updateWidth()
     window.addEventListener("resize", updateWidth)
     return () => window.removeEventListener("resize", updateWidth)
@@ -97,7 +94,7 @@ export function ScreenplayViewer({ screenplay, onBack }: ScreenplayViewerProps) 
           <div className="h-[60vh] overflow-y-auto flex justify-center">
             {screenplay.pdfUrl ? (
               <Document
-                file={screenplay.pdfUrl}
+                file={encodeURI(screenplay.pdfUrl)}
                 onLoadSuccess={({ numPages }) => setTotalPages(numPages)}
                 loading={<p className="text-muted-foreground">Loading PDF…</p>}
                 error={<p className="text-red-500">Failed to load PDF</p>}
@@ -119,7 +116,7 @@ export function ScreenplayViewer({ screenplay, onBack }: ScreenplayViewerProps) 
             )}
           </div>
 
-          {/* ---------- Controls (fixed position) ---------- */}
+          {/* ---------- Controls ---------- */}
           <div className="bg-secondary border-t border-border p-4 flex justify-between items-center">
             <button
               onClick={prevPage}
