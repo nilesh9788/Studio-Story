@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect } from "react"
 import { Document, Page, pdfjs } from "react-pdf"
 
-// ✅ Turbopack / Next.js safe worker setup
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`
 
 interface Screenplay {
@@ -29,11 +28,9 @@ export function ScreenplayViewer({ screenplay, onBack }: ScreenplayViewerProps) 
 
   const viewerRef = useRef<HTMLDivElement>(null)
 
-  /* ---------- Page navigation ---------- */
   const nextPage = () => setCurrentPage(p => Math.min(p + 1, totalPages))
   const prevPage = () => setCurrentPage(p => Math.max(p - 1, 1))
 
-  /* ---------- Keyboard navigation ---------- */
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
       if (e.key === "ArrowRight") nextPage()
@@ -43,9 +40,14 @@ export function ScreenplayViewer({ screenplay, onBack }: ScreenplayViewerProps) 
     return () => window.removeEventListener("keydown", handleKeyPress)
   }, [totalPages])
 
-  /* ---------- Responsive width ---------- */
+  /* ✅ Responsive PDF width (desktop + mobile safe) */
   useEffect(() => {
-    const updateWidth = () => setPageWidth(800)
+    const updateWidth = () => {
+      if (!viewerRef.current) return
+      const containerWidth = viewerRef.current.offsetWidth
+      setPageWidth(Math.min(containerWidth - 32, 800))
+    }
+
     updateWidth()
     window.addEventListener("resize", updateWidth)
     return () => window.removeEventListener("resize", updateWidth)
@@ -53,13 +55,9 @@ export function ScreenplayViewer({ screenplay, onBack }: ScreenplayViewerProps) 
 
   return (
     <div className="min-h-screen pt-20 bg-background">
-      {/* ---------- Toolbar ---------- */}
       <div className="sticky top-20 z-40 bg-secondary border-b border-border p-4">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <button
-            onClick={onBack}
-            className="flex items-center gap-2 hover:text-accent"
-          >
+          <button onClick={onBack} className="flex items-center gap-2 hover:text-accent">
             ← Back
           </button>
 
@@ -83,21 +81,13 @@ export function ScreenplayViewer({ screenplay, onBack }: ScreenplayViewerProps) 
         </div>
       </div>
 
-      {/* ---------- Viewer ---------- */}
-      <div
-        ref={viewerRef}
-        className="flex items-center justify-center p-6"
-      >
+      <div ref={viewerRef} className="flex items-center justify-center p-4 sm:p-6">
         <div className="bg-white rounded-lg shadow-xl overflow-hidden w-full max-w-4xl">
-          
-          {/* 🔥 Scrollable PDF container */}
           <div className="h-[60vh] overflow-y-auto flex justify-center">
             {screenplay.pdfUrl ? (
               <Document
                 file={encodeURI(screenplay.pdfUrl)}
                 onLoadSuccess={({ numPages }) => setTotalPages(numPages)}
-                loading={<p className="text-muted-foreground">Loading PDF…</p>}
-                error={<p className="text-red-500">Failed to load PDF</p>}
               >
                 <Page
                   pageNumber={currentPage}
@@ -116,7 +106,6 @@ export function ScreenplayViewer({ screenplay, onBack }: ScreenplayViewerProps) 
             )}
           </div>
 
-          {/* ---------- Controls ---------- */}
           <div className="bg-secondary border-t border-border p-4 flex justify-between items-center">
             <button
               onClick={prevPage}
